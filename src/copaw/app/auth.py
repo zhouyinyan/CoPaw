@@ -44,6 +44,8 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         "/api/auth/login",
         "/api/auth/status",
         "/api/auth/register",
+        "/api/auth/yukuai/login",
+        "/api/auth/yukuai/callback",
         "/api/version",
         "/api/settings/language",
     },

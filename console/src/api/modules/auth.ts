@@ -71,4 +71,13 @@ export const authApi = {
     }
     return res.json();
   },
+
+  yukuaiLogin: async (): Promise<{ login_url: string; enabled: boolean }> => {
+    const res = await fetch(getApiUrl("/auth/yukuai/login"));
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "渝快政登录失败");
+    }
+    return res.json();
+  },
 };

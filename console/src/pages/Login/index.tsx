@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Form, Input } from "antd";
 import { useAppMessage } from "../../hooks/useAppMessage";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import { LockOutlined, UserOutlined, QrcodeOutlined } from "@ant-design/icons";
 import { authApi } from "../../api/modules/auth";
 import { setAuthToken } from "../../api/config";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [yukuaiLoading, setYukuaiLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [hasUsers, setHasUsers] = useState(true);
   const { message } = useAppMessage();
@@ -33,6 +34,22 @@ export default function LoginPage() {
       })
       .catch(() => {});
   }, [navigate]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    const username = urlParams.get("username");
+    if (token && username) {
+      setAuthToken(token);
+      urlParams.delete("token");
+      urlParams.delete("username");
+      const redirect = urlParams.toString()
+        ? `?${urlParams.toString()}`
+        : "/chat";
+      message.success(`欢迎回来，${username}`);
+      navigate(redirect, { replace: true });
+    }
+  }, [navigate, message]);
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
@@ -68,6 +85,22 @@ export default function LoginPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleYukuaiLogin = async () => {
+    setYukuaiLoading(true);
+    try {
+      const res = await authApi.yukuaiLogin();
+      if (res.enabled && res.login_url) {
+        window.location.href = res.login_url;
+      } else {
+        message.warning("渝快政登录未启用");
+      }
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "渝快政登录失败");
+    } finally {
+      setYukuaiLoading(false);
     }
   };
 
@@ -166,6 +199,25 @@ export default function LoginPage() {
               style={{ height: 44, borderRadius: 8, fontWeight: 500 }}
             >
               {isRegister ? t("login.register") : t("login.submit")}
+            </Button>
+          </Form.Item>
+
+          <Form.Item style={{ marginTop: 16, marginBottom: 0 }}>
+            <Button
+              block
+              loading={yukuaiLoading}
+              icon={<QrcodeOutlined />}
+              onClick={handleYukuaiLogin}
+              style={{
+                height: 44,
+                borderRadius: 8,
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              渝快政扫码登录
             </Button>
           </Form.Item>
         </Form>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from ..auth import (
@@ -14,6 +15,11 @@ from ..auth import (
     register_user,
     update_credentials,
     verify_token,
+)
+from ..auth_yukuai import (
+    handle_yukuai_callback,
+    get_yukuai_login_url,
+    is_yukuai_auth_enabled,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -172,3 +178,60 @@ async def update_profile(req: UpdateProfileRequest, request: Request):
 
     username = req.new_username.strip() if req.new_username else ""
     return LoginResponse(token=token, username=username)
+
+
+class YukuaiLoginResponse(BaseModel):
+    login_url: str
+    enabled: bool
+
+
+@router.get("/yukuai/login")
+async def yukuai_login(request: Request):
+    """跳转到渝快政扫码登录页面."""
+    if not is_yukuai_auth_enabled():
+        return YukuaiLoginResponse(login_url="", enabled=False)
+
+    base_url = str(request.base_url).rstrip("/")
+    back_url = f"{base_url}/api/auth/yukuai/callback"
+    login_url = get_yukuai_login_url(back_url)
+
+    return YukuaiLoginResponse(login_url=login_url, enabled=True)
+
+
+@router.get("/yukuai/callback")
+async def yukuai_callback(code: str, state: str = ""):
+    """渝快政扫码回调处理."""
+    if not is_yukuai_auth_enabled():
+        raise HTTPException(
+            status_code=403,
+            detail="渝快政认证未启用",
+        )
+
+    result = await handle_yukuai_callback(code)
+    if not result:
+        raise HTTPException(
+            status_code=400,
+            detail="渝快政登录失败",
+        )
+
+    token = result["token"]
+    username = result["username"]
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>登录成功</title>
+</head>
+<body>
+    <p>登录成功，正在跳转...</p>
+    <script>
+        localStorage.setItem('copaw_auth_token', '{token}');
+        localStorage.setItem('copaw_username', '{username}');
+        window.location.href = '/chat';
+    </script>
+</body>
+</html>"""
+
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)

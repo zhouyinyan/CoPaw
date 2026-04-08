@@ -33,8 +33,20 @@ export default function AgentSelector({
     try {
       setLoading(true);
       const data = await agentsApi.listAgents();
-      // Sort agents: enabled first, disabled last
-      const sortedAgents = [...data.agents].sort((a, b) => {
+      
+      const availableAgentsJson = localStorage.getItem("copaw_available_agents");
+      const availableAgents: string[] = availableAgentsJson 
+        ? JSON.parse(availableAgentsJson) 
+        : null;
+      
+      let filteredAgents = data.agents;
+      if (availableAgents && availableAgents.length > 0) {
+        filteredAgents = data.agents.filter((agent) => 
+          availableAgents.includes(agent.id)
+        );
+      }
+      
+      const sortedAgents = [...filteredAgents].sort((a, b) => {
         if (a.enabled === b.enabled) return 0;
         return a.enabled ? -1 : 1;
       });

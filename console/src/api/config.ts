@@ -34,8 +34,13 @@ export function setAuthToken(token: string): void {
 }
 
 /**
- * Remove the auth token from localStorage (logout / 401).
+ * Remove the auth token and all user-related data from storage (logout / 401).
  */
 export function clearAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem("copaw_username");
+  localStorage.removeItem("copaw_user_id");
+  localStorage.removeItem("copaw_available_agents");
+  localStorage.removeItem("copaw_default_agent");
+  sessionStorage.removeItem("copaw-agent-storage");
 }

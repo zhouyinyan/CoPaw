@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AgentSummary } from "../api/types/agents";
 
+function getDefaultAgent(): string {
+  const stored = localStorage.getItem("copaw_default_agent");
+  return stored || "default";
+}
+
 interface AgentStore {
   selectedAgent: string;
   agents: AgentSummary[];
@@ -15,7 +20,7 @@ interface AgentStore {
 export const useAgentStore = create<AgentStore>()(
   persist(
     (set) => ({
-      selectedAgent: "default",
+      selectedAgent: getDefaultAgent(),
       agents: [],
 
       setSelectedAgent: (agentId) => set({ selectedAgent: agentId }),
@@ -28,12 +33,14 @@ export const useAgentStore = create<AgentStore>()(
         })),
 
       removeAgent: (agentId) =>
-        set((state) => ({
-          agents: state.agents.filter((a) => a.id !== agentId),
-          ...(state.selectedAgent === agentId
-            ? { selectedAgent: "default" }
-            : {}),
-        })),
+        set((state) => {
+          const newAgents = state.agents.filter((a) => a.id !== agentId);
+          const fallback = getDefaultAgent();
+          const newSelected = state.selectedAgent === agentId
+            ? (newAgents.length > 0 ? newAgents[0].id : fallback)
+            : state.selectedAgent;
+          return { agents: newAgents, selectedAgent: newSelected };
+        }),
 
       updateAgent: (agentId, updates) =>
         set((state) => ({

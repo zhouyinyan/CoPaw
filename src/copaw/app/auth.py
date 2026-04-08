@@ -161,6 +161,22 @@ def verify_token(token: str) -> Optional[str]:
         return None
 
 
+def get_user_id_from_token(token: str) -> Optional[str]:
+    """Extract user_id from token's subject.
+    
+    For yukuai users, the subject format is "yukuai_{accountId}".
+    Returns the accountId part or None if not a yukuai token.
+    """
+    username = verify_token(token)
+    if username is None:
+        return None
+    
+    if username.startswith("yukuai_"):
+        return username[7:]
+    
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Auth data persistence (auth.json in SECRET_DIR)
 # ---------------------------------------------------------------------------

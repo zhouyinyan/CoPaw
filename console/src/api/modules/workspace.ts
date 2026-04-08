@@ -14,8 +14,18 @@ function getSelectedAgentId(): string {
       }
     }
   } catch (error) {
-    console.warn("Failed to get selected agent from storage:", error);
+    console.warn("Failed to get selected agent from sessionStorage:", error);
   }
+  
+  try {
+    const defaultAgent = localStorage.getItem("copaw_default_agent");
+    if (defaultAgent) {
+      return defaultAgent;
+    }
+  } catch (error) {
+    console.warn("Failed to get default agent from localStorage:", error);
+  }
+  
   return "default";
 }
 

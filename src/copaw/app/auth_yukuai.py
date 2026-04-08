@@ -25,6 +25,11 @@ import httpx
 
 from ..constant import SECRET_DIR
 from .auth import create_token
+from .user_agent_manager import (
+    ensure_user_has_default_agent,
+    get_user_agents,
+    get_user_default_agent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -231,14 +236,15 @@ async def get_user_info(access_token: str, code: str) -> Optional[Dict[str, Any]
 def yukuai_register_or_login(
     account_id: str,
     user_info: Dict[str, Any],
-) -> Optional[str]:
+) -> Dict[str, Any]:
     """渝快政用户注册或登录.
 
     每个 accountId 对应一个独立账号。
-    返回JWT token.
+    返回包含 token 和用户信息的字典.
     """
     data = _load_yukuai_auth_data()
 
+    is_new_user = False
     if "users" not in data:
         data["users"] = {}
 
@@ -249,29 +255,46 @@ def yukuai_register_or_login(
         user["last_login"] = int(time.time())
         data["users"] = users
         _save_yukuai_auth_data(data)
-        return create_token(f"yukuai_{account_id}")
+    else:
+        users[account_id] = {
+            "account": user_info.get("account", ""),
+            "last_name": user_info.get("lastName", ""),
+            "nick_name": user_info.get("nickNameCn", ""),
+            "realm_name": user_info.get("realmName", ""),
+            "employee_code": user_info.get("employeeCode", ""),
+            "created_at": int(time.time()),
+            "last_login": int(time.time()),
+        }
+        data["users"] = users
+        _save_yukuai_auth_data(data)
+        is_new_user = True
 
-    users[account_id] = {
-        "account": user_info.get("account", ""),
-        "last_name": user_info.get("lastName", ""),
-        "nick_name": user_info.get("nickNameCn", ""),
-        "realm_name": user_info.get("realmName", ""),
-        "employee_code": user_info.get("employeeCode", ""),
-        "created_at": int(time.time()),
-        "last_login": int(time.time()),
+    logger.info(
+        "渝快政用户%s: accountId=%s, account=%s",
+        "注册" if is_new_user else "登录",
+        account_id,
+        user_info.get("account"),
+    )
+
+    ensure_user_has_default_agent(account_id)
+    
+    available_agents = get_user_agents(account_id)
+    default_agent = get_user_default_agent(account_id)
+
+    token = create_token(f"yukuai_{account_id}")
+    
+    return {
+        "token": token,
+        "user_id": account_id,
+        "available_agents": available_agents,
+        "default_agent": default_agent,
     }
-    data["users"] = users
-    _save_yukuai_auth_data(data)
-
-    logger.info("渝快政用户注册: accountId=%s, account=%s", account_id, user_info.get("account"))
-
-    return create_token(f"yukuai_{account_id}")
 
 
-async def handle_yukuai_callback(code: str) -> Optional[Dict[str, str]]:
+async def handle_yukuai_callback(code: str) -> Optional[Dict[str, Any]]:
     """处理渝快政扫码回调.
 
-    返回: {"token": "...", "username": "..."} 或 None
+    返回: {"token": "...", "username": "...", "user_id": "...", "available_agents": [...], "default_agent": "..."} 或 None
     """
     access_token = await get_access_token()
     if not access_token:
@@ -286,11 +309,14 @@ async def handle_yukuai_callback(code: str) -> Optional[Dict[str, str]]:
         logger.error("用户信息中缺少accountId")
         return None
 
-    token = yukuai_register_or_login(account_id, user_info)
-    if not token:
+    result = yukuai_register_or_login(account_id, user_info)
+    if not result:
         return None
 
     return {
-        "token": token,
+        "token": result["token"],
         "username": user_info.get("lastName") or user_info.get("account", "未知用户"),
+        "user_id": result["user_id"],
+        "available_agents": result["available_agents"],
+        "default_agent": result["default_agent"],
     }

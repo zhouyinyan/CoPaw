@@ -22,6 +22,7 @@ import LoginPage from "./pages/Login";
 import { authApi } from "./api/modules/auth";
 import { languageApi } from "./api/modules/language";
 import { getApiUrl, getApiToken, clearAuthToken } from "./api/config";
+import { useAgentStore } from "./stores/agentStore";
 import "./styles/layout.css";
 import "./styles/form-override.css";
 
@@ -72,6 +73,21 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
           });
           if (cancelled) return;
           if (r.ok) {
+            const verifyData = await r.json();
+            if (verifyData.user_id) {
+              localStorage.setItem("copaw_user_id", verifyData.user_id || "");
+              localStorage.setItem(
+                "copaw_available_agents",
+                JSON.stringify(verifyData.available_agents || []),
+              );
+              localStorage.setItem(
+                "copaw_default_agent",
+                verifyData.default_agent || "",
+              );
+              if (verifyData.default_agent) {
+                useAgentStore.getState().setSelectedAgent(verifyData.default_agent);
+              }
+            }
             setStatus("ok");
           } else {
             clearAuthToken();

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from ..auth import (
     authenticate,
+    get_user_id_from_token,
     has_registered_users,
     is_auth_enabled,
     register_user,
@@ -20,6 +21,10 @@ from ..auth_yukuai import (
     handle_yukuai_callback,
     get_yukuai_login_url,
     is_yukuai_auth_enabled,
+)
+from ..user_agent_manager import (
+    get_user_agents,
+    get_user_default_agent,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -117,7 +122,21 @@ async def verify(request: Request):
             detail="Invalid or expired token",
         )
 
-    return {"valid": True, "username": username}
+    user_id = get_user_id_from_token(token)
+    available_agents = []
+    default_agent = None
+    
+    if user_id:
+        available_agents = get_user_agents(user_id)
+        default_agent = get_user_default_agent(user_id)
+
+    return {
+        "valid": True,
+        "username": username,
+        "user_id": user_id or "",
+        "available_agents": available_agents,
+        "default_agent": default_agent,
+    }
 
 
 class UpdateProfileRequest(BaseModel):
@@ -216,7 +235,14 @@ async def yukuai_callback(code: str, state: str = ""):
 
     token = result["token"]
     username = result["username"]
+    user_id = result.get("user_id", "")
+    available_agents = result.get("available_agents", [])
+    default_agent = result.get("default_agent", "")
 
+    import json
+    
+    agents_json = json.dumps(available_agents).replace("'", "\\'")
+    
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -228,6 +254,9 @@ async def yukuai_callback(code: str, state: str = ""):
     <script>
         localStorage.setItem('copaw_auth_token', '{token}');
         localStorage.setItem('copaw_username', '{username}');
+        localStorage.setItem('copaw_user_id', '{user_id}');
+        localStorage.setItem('copaw_available_agents', '{agents_json}');
+        localStorage.setItem('copaw_default_agent', '{default_agent}');
         window.location.href = '/chat';
     </script>
 </body>

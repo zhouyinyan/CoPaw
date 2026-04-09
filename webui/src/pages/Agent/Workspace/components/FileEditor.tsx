@@ -135,7 +135,8 @@ export const FileEditor: React.FC<FileEditorProps> = ({
         ) : (
           <div className={styles.emptyState}>{t("workspace.selectFile")}</div>
         )}
-        <p className={styles.attribution}>{t("workspace.attribution")}</p>
+        {/* OpenClaw 致谢文本 - 已隐藏 */}
+        {/* <p className={styles.attribution}>{t("workspace.attribution")}</p> */}
       </Card>
     </div>
   );

@@ -44,12 +44,12 @@ export const createColumns = (
       key: "session_id",
       width: 180,
     },
-    {
-      title: "UserID",
-      dataIndex: "user_id",
-      key: "user_id",
-      width: 150,
-    },
+    // {
+    //   title: "UserID",
+    //   dataIndex: "user_id",
+    //   key: "user_id",
+    //   width: 150,
+    // },
     {
       title: "Channel",
       dataIndex: "channel",

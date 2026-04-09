@@ -34,7 +34,7 @@ from .user_agent_manager import (
 logger = logging.getLogger(__name__)
 
 YUKUAIZHENG_API_BASE = "https://zd-openplatform.bigdatacq.com"
-YUKUAIZHENG_QR_LOGIN_URL = "https://zd-login.bigdatacq.com/qrlogin/webAppLogin.htm"
+YUKUAIZHENG_QR_LOGIN_URL = "https://zd-login.bigdatacq.com/oauth2/auth.htm"
 
 AUTH_YUKUAIZHENG_FILE = SECRET_DIR / "auth_yukuai.json"
 
@@ -84,22 +84,20 @@ def get_yukuai_config() -> Dict[str, str]:
     """获取渝快政配置."""
     return {
         "app_name": os.environ.get("COPAW_YUKUAIZHENG_APP_NAME", "").strip(),
-        "protocol_key": os.environ.get("COPAW_YUKUAIZHENG_PROTOCOL_KEY", "").strip(),
         "app_key": os.environ.get("COPAW_YUKUAIZHENG_APP_KEY", "").strip(),
         "app_secret": os.environ.get("COPAW_YUKUAIZHENG_APP_SECRET", "").strip(),
     }
 
 
-def get_yukuai_login_url(back_url: str) -> str:
+def get_yukuai_login_url(redirect_uri: str) -> str:
     """生成渝快政扫码登录URL."""
     config = get_yukuai_config()
     params = {
-        "APP_NAME": config["app_name"],
-        "protocolKey": config["protocol_key"],
-        "protocol": "oauth2",
-        "BACK_URL": back_url,
+        "response_type": "code",
+        "client_id": config["app_name"],
+        "redirect_uri": redirect_uri,
         "scope": "get_user_info",
-        "state": secrets.token_hex(8),
+        "authType": "QRCODE",
     }
     query_string = "&".join(f"{k}={v}" for k, v in params.items() if v)
     return f"{YUKUAIZHENG_QR_LOGIN_URL}?{query_string}"

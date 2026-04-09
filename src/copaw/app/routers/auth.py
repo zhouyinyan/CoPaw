@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel
 
 from ..auth import (
@@ -205,16 +205,20 @@ class YukuaiLoginResponse(BaseModel):
 
 
 @router.get("/yukuai/login")
-async def yukuai_login(request: Request):
+async def yukuai_login(request: Request, frontend_url: str = ""):
     """跳转到渝快政扫码登录页面."""
     if not is_yukuai_auth_enabled():
-        return YukuaiLoginResponse(login_url="", enabled=False)
+        return JSONResponse(content={"login_url": "", "enabled": False})
 
-    base_url = str(request.base_url).rstrip("/")
-    back_url = f"{base_url}/api/auth/yukuai/callback"
-    login_url = get_yukuai_login_url(back_url)
+    if frontend_url:
+        redirect_uri = f"{frontend_url}/api/auth/yukuai/callback"
+    else:
+        base_url = str(request.base_url).rstrip("/")
+        redirect_uri = f"{base_url}/api/auth/yukuai/callback"
+    
+    login_url = get_yukuai_login_url(redirect_uri)
 
-    return YukuaiLoginResponse(login_url=login_url, enabled=True)
+    return JSONResponse(content={"login_url": login_url, "enabled": True})
 
 
 @router.get("/yukuai/callback")
@@ -257,7 +261,9 @@ async def yukuai_callback(code: str, state: str = ""):
         localStorage.setItem('copaw_user_id', '{user_id}');
         localStorage.setItem('copaw_available_agents', '{agents_json}');
         localStorage.setItem('copaw_default_agent', '{default_agent}');
-        window.location.href = '/chat';
+        
+        // Use current page origin as frontend URL
+        window.location.href = window.location.origin + '/chat';
     </script>
 </body>
 </html>"""

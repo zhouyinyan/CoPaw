@@ -10,18 +10,23 @@ function getDefaultAgent(): string {
 interface AgentStore {
   selectedAgent: string;
   agents: AgentSummary[];
+  /** Per-agent last active chat ID for restoring on agent switch */
+  lastChatIdByAgent: Record<string, string>;
   setSelectedAgent: (agentId: string) => void;
   setAgents: (agents: AgentSummary[]) => void;
   addAgent: (agent: AgentSummary) => void;
   removeAgent: (agentId: string) => void;
   updateAgent: (agentId: string, updates: Partial<AgentSummary>) => void;
+  setLastChatId: (agentId: string, chatId: string) => void;
+  getLastChatId: (agentId: string) => string | undefined;
 }
 
 export const useAgentStore = create<AgentStore>()(
   persist(
-    (set) => ({
-      selectedAgent: getDefaultAgent(),
+    (set, get) => ({
+      selectedAgent: "default",
       agents: [],
+      lastChatIdByAgent: {},
 
       setSelectedAgent: (agentId) => set({ selectedAgent: agentId }),
 
@@ -33,14 +38,12 @@ export const useAgentStore = create<AgentStore>()(
         })),
 
       removeAgent: (agentId) =>
-        set((state) => {
-          const newAgents = state.agents.filter((a) => a.id !== agentId);
-          const fallback = getDefaultAgent();
-          const newSelected = state.selectedAgent === agentId
-            ? (newAgents.length > 0 ? newAgents[0].id : fallback)
-            : state.selectedAgent;
-          return { agents: newAgents, selectedAgent: newSelected };
-        }),
+        set((state) => ({
+          agents: state.agents.filter((a) => a.id !== agentId),
+          ...(state.selectedAgent === agentId
+            ? { selectedAgent: "default" }
+            : {}),
+        })),
 
       updateAgent: (agentId, updates) =>
         set((state) => ({
@@ -48,6 +51,13 @@ export const useAgentStore = create<AgentStore>()(
             a.id === agentId ? { ...a, ...updates } : a,
           ),
         })),
+
+      setLastChatId: (agentId, chatId) =>
+        set((state) => ({
+          lastChatIdByAgent: { ...state.lastChatIdByAgent, [agentId]: chatId },
+        })),
+
+      getLastChatId: (agentId) => get().lastChatIdByAgent[agentId],
     }),
     {
       name: "copaw-agent-storage",

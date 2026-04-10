@@ -1,5 +1,4 @@
 import { Layout, Space, Badge } from "antd";
-import LanguageSwitcher from "../components/LanguageSwitcher/index";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { useTranslation } from "react-i18next";
 
@@ -110,7 +109,6 @@ export default function Header() {
           )}
         </div>
         <Space size="middle">
-          <LanguageSwitcher />
           <ThemeToggleButton />
         </Space>
       </AntHeader>

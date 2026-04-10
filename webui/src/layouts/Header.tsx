@@ -87,7 +87,7 @@ export default function Header() {
                 ? `${import.meta.env.BASE_URL}dark-logo.png`
                 : `${import.meta.env.BASE_URL}logo.png`
             }
-            alt="CoPaw"
+            alt="GRPClaw"
             className={styles.logoImg}
           />
           <div className={styles.logoDivider} />

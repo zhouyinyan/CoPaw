@@ -136,7 +136,7 @@ export default function LoginPage() {
             src={`${import.meta.env.BASE_URL}${
               isDark ? "dark-logo.png" : "logo.png"
             }`}
-            alt="CoPaw"
+            alt="GRPClaw"
             style={{ height: 48, marginBottom: 12 }}
           />
           <h2 style={{ margin: 0, fontWeight: 600, fontSize: 20 }}>

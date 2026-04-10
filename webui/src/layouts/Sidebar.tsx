@@ -155,12 +155,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
     //   path: "/heartbeat",
     //   label: t("nav.heartbeat"),
     // },
-    {
-      key: "workspace",
-      icon: <SparkLocalFileLine size={18} />,
-      path: "/workspace",
-      label: t("nav.workspace"),
-    },
+    // {
+    //   key: "workspace",
+    //   icon: <SparkLocalFileLine size={18} />,
+    //   path: "/workspace",
+    //   label: t("nav.workspace"),
+    // },
     {
       key: "skills",
       icon: <SparkMagicWandLine size={18} />,
@@ -185,12 +185,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
     //   path: "/mcp",
     //   label: t("nav.mcp"),
     // },
-    {
-      key: "agent-config",
-      icon: <SparkModifyLine size={18} />,
-      path: "/agent-config",
-      label: t("nav.agentConfig"),
-    },
+    // {
+    //   key: "agent-config",
+    //   icon: <SparkModifyLine size={18} />,
+    //   path: "/agent-config",
+    //   label: t("nav.agentConfig"),
+    // },
     // {
     //   key: "agents",
     //   icon: <SparkAgentLine size={18} />,
@@ -209,12 +209,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
     //   path: "/environments",
     //   label: t("nav.environments"),
     // },
-    {
-      key: "security",
-      icon: <SparkBrowseLine size={18} />,
-      path: "/security",
-      label: t("nav.security"),
-    },
+    // {
+    //   key: "security",
+    //   icon: <SparkBrowseLine size={18} />,
+    //   path: "/security",
+    //   label: t("nav.security"),
+    // },
     ...(authEnabled
       ? [
           {
@@ -252,26 +252,26 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: collapsed ? null : t("nav.sessions"),
       icon: <SparkUserGroupLine size={16} />,
     },
-    {
-      key: "workspace",
-      label: collapsed ? null : t("nav.workspace"),
-      icon: <SparkLocalFileLine size={16} />,
-    },
+    // {
+    //   key: "workspace",
+    //   label: collapsed ? null : t("nav.workspace"),
+    //   icon: <SparkLocalFileLine size={16} />,
+    // },
     {
       key: "skills",
       label: collapsed ? null : t("nav.skills"),
       icon: <SparkMagicWandLine size={16} />,
     },
-    {
-      key: "agent-config",
-      label: collapsed ? null : t("nav.agentConfig"),
-      icon: <SparkModifyLine size={16} />,
-    },
-    {
-      key: "security",
-      label: collapsed ? null : t("nav.security"),
-      icon: <SparkBrowseLine size={16} />,
-    },
+    // {
+    //   key: "agent-config",
+    //   label: collapsed ? null : t("nav.agentConfig"),
+    //   icon: <SparkModifyLine size={16} />,
+    // },
+    // {
+    //   key: "security",
+    //   label: collapsed ? null : t("nav.security"),
+    //   icon: <SparkBrowseLine size={16} />,
+    // },
     ...(authEnabled
       ? [
           {
